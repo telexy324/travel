@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, Attraction, Comment } from '../types';
 import { storage } from '../lib/storage';
@@ -14,11 +14,11 @@ interface StoreState {
   error: string | null;
   setUser: (user: User | null) => void;
   setAttractions: (attractions: Attraction[]) => void;
-  addComment: (comment: Comment) => void;
-  markAsVisited: (attractionId: string) => void;
-  markAsWantToVisit: (attractionId: string) => void;
-  removeFromVisited: (attractionId: string) => void;
-  removeFromWantToVisit: (attractionId: string) => void;
+  addComment: (attractionId: string, content: string) => Promise<void>;
+  markAsVisited: (attractionId: string) => Promise<void>;
+  markAsWantToVisit: (attractionId: string) => Promise<void>;
+  removeFromVisited: (attractionId: string) => Promise<void>;
+  removeFromWantToVisit: (attractionId: string) => Promise<void>;
   loadInitialData: () => Promise<void>;
   setError: (error: string | null) => void;
   clearError: () => void;
@@ -26,9 +26,8 @@ interface StoreState {
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   getAttraction: (id: string) => Attraction | undefined;
-  toggleWantToVisit: (id: string) => void;
-  toggleVisited: (id: string) => void;
-  addComment: (attractionId: string, content: string) => void;
+  toggleWantToVisit: (id: string) => Promise<void>;
+  toggleVisited: (id: string) => Promise<void>;
   setLoading: (loading: boolean) => void;
 }
 
@@ -69,16 +68,51 @@ export const useStore = create<StoreState>()(
         }
       },
 
-      addComment: async (comment) => {
+      addComment: async (attractionId: string, content: string) => {
         try {
           set({ isLoading: true, error: null });
-          const { comments } = get();
-          const newComments = [...comments, comment];
-          await storage.saveComments(newComments);
-          set({ comments: newComments });
+          const { user, attractions, comments } = get();
+          if (!user) {
+            throw new Error('请先登录');
+          }
+
+          const newComment: Comment = {
+            id: Date.now().toString(),
+            attractionId,
+            userId: user.id,
+            userName: user.name,
+            content,
+            createdAt: new Date().toISOString(),
+            user: {
+              name: user.name,
+              avatar: user.avatar,
+            },
+          };
+
+          const newComments = [...comments, newComment];
+          const updatedAttractions = attractions.map(attraction => {
+            if (attraction.id === attractionId) {
+              return {
+                ...attraction,
+                comments: [...attraction.comments, newComment],
+              };
+            }
+            return attraction;
+          });
+
+          await Promise.all([
+            storage.saveComments(newComments),
+            storage.saveAttractions(updatedAttractions),
+          ]);
+
+          set({
+            comments: newComments,
+            attractions: updatedAttractions,
+          });
         } catch (error) {
           set({ error: '添加评论失败' });
           console.error('添加评论失败:', error);
+          throw error;
         } finally {
           set({ isLoading: false });
         }
@@ -87,18 +121,31 @@ export const useStore = create<StoreState>()(
       markAsVisited: async (attractionId) => {
         try {
           set({ isLoading: true, error: null });
-          const { visitedAttractions, wantToVisitAttractions } = get();
+          const { visitedAttractions, wantToVisitAttractions, attractions } = get();
           const newVisited = [...visitedAttractions, attractionId];
           const newWantToVisit = wantToVisitAttractions.filter(id => id !== attractionId);
           
+          const updatedAttractions = attractions.map(attraction => {
+            if (attraction.id === attractionId) {
+              return {
+                ...attraction,
+                visited: true,
+                wantToVisit: false,
+              };
+            }
+            return attraction;
+          });
+
           await Promise.all([
             storage.saveVisitedAttractions(newVisited),
             storage.saveWantToVisitAttractions(newWantToVisit),
+            storage.saveAttractions(updatedAttractions),
           ]);
 
           set({
             visitedAttractions: newVisited,
             wantToVisitAttractions: newWantToVisit,
+            attractions: updatedAttractions,
           });
         } catch (error) {
           set({ error: '标记已访问失败' });
@@ -111,18 +158,31 @@ export const useStore = create<StoreState>()(
       markAsWantToVisit: async (attractionId) => {
         try {
           set({ isLoading: true, error: null });
-          const { visitedAttractions, wantToVisitAttractions } = get();
+          const { visitedAttractions, wantToVisitAttractions, attractions } = get();
           const newWantToVisit = [...wantToVisitAttractions, attractionId];
           const newVisited = visitedAttractions.filter(id => id !== attractionId);
           
+          const updatedAttractions = attractions.map(attraction => {
+            if (attraction.id === attractionId) {
+              return {
+                ...attraction,
+                visited: false,
+                wantToVisit: true,
+              };
+            }
+            return attraction;
+          });
+
           await Promise.all([
             storage.saveVisitedAttractions(newVisited),
             storage.saveWantToVisitAttractions(newWantToVisit),
+            storage.saveAttractions(updatedAttractions),
           ]);
 
           set({
             visitedAttractions: newVisited,
             wantToVisitAttractions: newWantToVisit,
+            attractions: updatedAttractions,
           });
         } catch (error) {
           set({ error: '标记想去失败' });
@@ -135,10 +195,28 @@ export const useStore = create<StoreState>()(
       removeFromVisited: async (attractionId) => {
         try {
           set({ isLoading: true, error: null });
-          const { visitedAttractions } = get();
+          const { visitedAttractions, attractions } = get();
           const newVisited = visitedAttractions.filter(id => id !== attractionId);
-          await storage.saveVisitedAttractions(newVisited);
-          set({ visitedAttractions: newVisited });
+          
+          const updatedAttractions = attractions.map(attraction => {
+            if (attraction.id === attractionId) {
+              return {
+                ...attraction,
+                visited: false,
+              };
+            }
+            return attraction;
+          });
+
+          await Promise.all([
+            storage.saveVisitedAttractions(newVisited),
+            storage.saveAttractions(updatedAttractions),
+          ]);
+
+          set({
+            visitedAttractions: newVisited,
+            attractions: updatedAttractions,
+          });
         } catch (error) {
           set({ error: '移除已访问失败' });
           console.error('移除已访问失败:', error);
@@ -150,10 +228,28 @@ export const useStore = create<StoreState>()(
       removeFromWantToVisit: async (attractionId) => {
         try {
           set({ isLoading: true, error: null });
-          const { wantToVisitAttractions } = get();
+          const { wantToVisitAttractions, attractions } = get();
           const newWantToVisit = wantToVisitAttractions.filter(id => id !== attractionId);
-          await storage.saveWantToVisitAttractions(newWantToVisit);
-          set({ wantToVisitAttractions: newWantToVisit });
+          
+          const updatedAttractions = attractions.map(attraction => {
+            if (attraction.id === attractionId) {
+              return {
+                ...attraction,
+                wantToVisit: false,
+              };
+            }
+            return attraction;
+          });
+
+          await Promise.all([
+            storage.saveWantToVisitAttractions(newWantToVisit),
+            storage.saveAttractions(updatedAttractions),
+          ]);
+
+          set({
+            wantToVisitAttractions: newWantToVisit,
+            attractions: updatedAttractions,
+          });
         } catch (error) {
           set({ error: '移除想去失败' });
           console.error('移除想去失败:', error);
@@ -173,9 +269,16 @@ export const useStore = create<StoreState>()(
             storage.getWantToVisitAttractions(),
           ]);
 
+          // 更新景点的 visited 和 wantToVisit 状态
+          const updatedAttractions = attractions.map(attraction => ({
+            ...attraction,
+            visited: visitedAttractions.includes(attraction.id),
+            wantToVisit: wantToVisitAttractions.includes(attraction.id),
+          }));
+
           set({
             user,
-            attractions,
+            attractions: updatedAttractions,
             comments,
             visitedAttractions,
             wantToVisitAttractions,
@@ -231,43 +334,29 @@ export const useStore = create<StoreState>()(
         return get().attractions.find(a => a.id === id);
       },
 
-      toggleWantToVisit: (id: string) => {
+      toggleWantToVisit: async (id: string) => {
         const { wantToVisitAttractions } = get();
-        const newWantToVisit = wantToVisitAttractions.includes(id)
-          ? wantToVisitAttractions.filter(a => a !== id)
-          : [...wantToVisitAttractions, id];
-        set({ wantToVisitAttractions: newWantToVisit });
+        if (wantToVisitAttractions.includes(id)) {
+          await get().removeFromWantToVisit(id);
+        } else {
+          await get().markAsWantToVisit(id);
+        }
       },
 
-      toggleVisited: (id: string) => {
+      toggleVisited: async (id: string) => {
         const { visitedAttractions } = get();
-        const newVisited = visitedAttractions.includes(id)
-          ? visitedAttractions.filter(a => a !== id)
-          : [...visitedAttractions, id];
-        set({ visitedAttractions: newVisited });
+        if (visitedAttractions.includes(id)) {
+          await get().removeFromVisited(id);
+        } else {
+          await get().markAsVisited(id);
+        }
       },
 
-      addComment: (attractionId: string, content: string) => {
-        const { user, comments } = get();
-        if (!user) return;
-
-        const newComment: Comment = {
-          id: Date.now().toString(),
-          attractionId,
-          userId: user.id,
-          userName: user.name,
-          content,
-          createdAt: new Date().toISOString(),
-        };
-
-        set({ comments: [...comments, newComment] });
-      },
-
-      setLoading: (loading: boolean) => set({ isLoading: loading }),
+      setLoading: (loading) => set({ isLoading: loading }),
     }),
     {
       name: 'travel-app-storage',
-      getStorage: () => AsyncStorage,
+      storage: createJSONStorage(() => AsyncStorage),
     }
   )
 ); 

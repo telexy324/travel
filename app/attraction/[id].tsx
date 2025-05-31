@@ -5,6 +5,7 @@ import { useStore } from '../../store/useStore';
 import { PageTransition } from '../../components/PageTransition';
 import { InfiniteList } from '../../components/InfiniteList';
 import { Ionicons } from '@expo/vector-icons';
+import { Comment } from '../../types';
 
 export default function AttractionDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -22,11 +23,11 @@ export default function AttractionDetailScreen() {
     );
   }
 
-  const renderComment = (comment: any) => (
+  const renderComment = (comment: Comment) => (
     <View className="bg-white p-4 mb-2 rounded-lg">
       <View className="flex-row items-center mb-2">
         <Image
-          source={{ uri: comment.user.avatar }}
+          source={comment.user.avatar ? { uri: comment.user.avatar } : { uri: 'https://via.placeholder.com/32' }}
           className="w-8 h-8 rounded-full"
         />
         <View className="ml-2">
@@ -43,7 +44,7 @@ export default function AttractionDetailScreen() {
       <ScrollView className="flex-1 bg-gray-100">
         <View className="relative">
           <Image
-            source={{ uri: attraction.images[0] }}
+            source={{ uri: attraction.images[0] || attraction.imageUrl }}
             className="w-full h-64"
             resizeMode="cover"
           />

@@ -4,12 +4,29 @@ import { useRouter } from 'expo-router';
 import { useStore } from '../store/useStore';
 import { PageTransition } from '../components/PageTransition';
 import { InfiniteList } from '../components/InfiniteList';
+import { Attraction } from '../types';
+
+interface RankedAttraction extends Attraction {
+  rank: number;
+  visitCount: number;
+  wantToVisitCount: number;
+}
 
 export default function RankingScreen() {
   const router = useRouter();
-  const { topAttractions, loadMoreTopAttractions } = useStore();
+  const { attractions } = useStore();
 
-  const renderItem = (attraction: any) => (
+  // 计算景点排名
+  const topAttractions: RankedAttraction[] = attractions
+    .map((attraction, index) => ({
+      ...attraction,
+      rank: index + 1,
+      visitCount: Math.floor(Math.random() * 1000), // 临时使用随机数，实际应该从后端获取
+      wantToVisitCount: Math.floor(Math.random() * 500), // 临时使用随机数，实际应该从后端获取
+    }))
+    .sort((a, b) => b.visitCount - a.visitCount);
+
+  const renderItem = (attraction: RankedAttraction) => (
     <TouchableOpacity
       className="bg-white p-4 mb-2 rounded-lg shadow-sm"
       onPress={() => router.push(`/attraction/${attraction.id}`)}
@@ -34,8 +51,8 @@ export default function RankingScreen() {
         <InfiniteList
           data={topAttractions}
           renderItem={renderItem}
-          onLoadMore={loadMoreTopAttractions}
-          hasMore={true}
+          onLoadMore={async () => {}}
+          hasMore={false}
           keyExtractor={(item) => item.id}
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center p-4">

@@ -7,7 +7,10 @@ import { Ionicons } from '@expo/vector-icons';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, visitedCount, wantToVisitCount, logout } = useStore();
+  const { user, visitedAttractions, wantToVisitAttractions, logout } = useStore();
+
+  const visitedCount = visitedAttractions.length;
+  const wantToVisitCount = wantToVisitAttractions.length;
 
   if (!user) {
     return (
@@ -37,7 +40,7 @@ export default function ProfileScreen() {
         <View className="bg-white p-6">
           <View className="flex-row items-center">
             <Image
-              source={{ uri: user.avatar }}
+              source={user.avatar ? { uri: user.avatar } : { uri: 'https://via.placeholder.com/80' }}
               className="w-20 h-20 rounded-full"
             />
             <View className="ml-4">
@@ -61,10 +64,10 @@ export default function ProfileScreen() {
         <View className="mt-4">
           <TouchableOpacity
             className="flex-row items-center bg-white p-4 border-b border-gray-200"
-            onPress={() => router.push('/history')}
+            onPress={() => router.push('/visited')}
           >
             <Ionicons name="time-outline" size={24} color="#666" />
-            <Text className="ml-4 text-gray-800">浏览历史</Text>
+            <Text className="ml-4 text-gray-800">已到访景点</Text>
             <Ionicons name="chevron-forward" size={24} color="#999" className="ml-auto" />
           </TouchableOpacity>
 

@@ -30,8 +30,8 @@ export default function MapScreen() {
             <Marker
               key={attraction.id}
               coordinate={{
-                latitude: attraction.latitude,
-                longitude: attraction.longitude,
+                latitude: attraction.location.latitude,
+                longitude: attraction.location.longitude,
               }}
               onPress={() => handleMarkerPress(attraction)}
             >

@@ -32,7 +32,7 @@ export default function RegisterScreen() {
         <View className="flex-1 px-6 pt-12">
           <View className="items-center mb-12">
             <Image
-              source={require('../../assets/logo.png')}
+              source={{ uri: 'https://via.placeholder.com/96' }}
               className="w-24 h-24 mb-4"
             />
             <Text className="text-2xl font-bold text-gray-800">创建账号</Text>

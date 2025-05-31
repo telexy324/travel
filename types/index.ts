@@ -2,6 +2,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  avatar?: string;
 }
 
 export interface Location {
@@ -16,6 +17,10 @@ export interface Comment {
   userName: string;
   content: string;
   createdAt: string;
+  user: {
+    name: string;
+    avatar?: string;
+  };
 }
 
 export interface Attraction {
@@ -23,11 +28,15 @@ export interface Attraction {
   name: string;
   description: string;
   imageUrl: string;
-  location: string;
+  images: string[];
+  location: Location;
   rating: number;
   price: number;
   category: string;
   tags: string[];
+  comments: Comment[];
+  wantToVisit: boolean;
+  visited: boolean;
 }
 
 export interface UserAttractionStatus {
