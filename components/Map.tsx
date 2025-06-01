@@ -1,7 +1,8 @@
 import React, { useRef, useEffect } from 'react';
 import { View, Text, Platform } from 'react-native';
 import MapView, { Marker, Callout, PROVIDER_DEFAULT } from 'react-native-maps';
-import { useStore } from '../store/useStore';
+import { useStore } from '@/store/useStore';
+import { Attraction } from '@/types';
 
 interface MapProps {
   onMarkerPress?: (id: string) => void;
@@ -23,15 +24,17 @@ export function Map({ onMarkerPress }: MapProps) {
   }, []);
 
   const renderMarkers = () => {
-    return attractions.map((attraction) => {
-      const [longitude, latitude] = attraction.location.split(',').map(Number);
+    return attractions.map((attraction: Attraction) => {
       const isVisited = visitedAttractions.includes(attraction.id);
       const isWantToVisit = wantToVisitAttractions.includes(attraction.id);
 
       return (
         <Marker
           key={attraction.id}
-          coordinate={{ latitude, longitude }}
+          coordinate={{
+            latitude: attraction.location.latitude,
+            longitude: attraction.location.longitude,
+          }}
           onPress={() => onMarkerPress?.(attraction.id)}
         >
           <View

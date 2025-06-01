@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useStore } from '../store/useStore';
-import { PageTransition } from '../components/PageTransition';
+import { useStore } from '@/store/useStore';
+import { PageTransition } from '@/components/PageTransition';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ProfileScreen() {

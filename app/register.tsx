@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useStore } from '../store/useStore';
-import { PageTransition } from '../components/PageTransition';
+import { useStore } from '@/store/useStore';
+import { PageTransition } from '@/components/PageTransition';
 
 export default function RegisterScreen() {
   const router = useRouter();

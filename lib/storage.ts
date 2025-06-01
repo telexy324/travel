@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { User, Attraction, Comment } from '../types';
+import { User, Attraction, Comment } from '@/types';
 
 const STORAGE_KEYS = {
   USER: '@travel:user',

@@ -1,8 +1,9 @@
+import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect } from 'react';
-import { useStore } from '../store/useStore';
-import { LoadingOverlay } from '../components/LoadingOverlay';
+import { useStore } from '@/store/useStore';
+import { LoadingOverlay } from '@/components/LoadingOverlay';
 
 export default function Layout() {
   const loadInitialData = useStore(state => state.loadInitialData);
@@ -67,7 +68,7 @@ export default function Layout() {
           }}
         />
       </Tabs>
-      <LoadingOverlay />
+      <LoadingOverlay visible={false} />
     </>
   );
 } 

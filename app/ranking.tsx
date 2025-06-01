@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useStore } from '../store/useStore';
-import { PageTransition } from '../components/PageTransition';
-import { InfiniteList } from '../components/InfiniteList';
-import { Attraction } from '../types';
+import { useStore } from '@/store/useStore';
+import { PageTransition } from '@/components/PageTransition';
+import { InfiniteList } from '@/components/InfiniteList';
+import { Attraction } from '@/types';
 
 interface RankedAttraction extends Attraction {
   rank: number;

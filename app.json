@@ -6,7 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -27,7 +26,6 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
       "package": "com.yourcompany.travel",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
@@ -46,6 +44,7 @@
         }
       ]
     ],
-    "scheme": "travel"
+    "scheme": "travel",
+    "sdkVersion": "53.0.0"
   }
 }

@@ -1,10 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useStore } from '../store/useStore';
-import { PageTransition } from '../components/PageTransition';
-import { InfiniteList } from '../components/InfiniteList';
-import { Attraction } from '../types';
+import { useStore } from '@/store/useStore';
+import { Attraction } from '@/types';
+import MapView, { Marker, Callout } from 'react-native-maps';
 
 export default function VisitedScreen() {
   const router = useRouter();
@@ -28,22 +27,35 @@ export default function VisitedScreen() {
   );
 
   return (
-    <PageTransition>
-      <View className="flex-1 bg-gray-100">
-        <InfiniteList
-          data={visitedAttractionsData}
-          renderItem={renderItem}
-          hasMore={false}
-          keyExtractor={(item) => item.id}
-          ListEmptyComponent={
-            <View className="flex-1 items-center justify-center p-4">
-              <Text className="text-gray-500 text-center">
-                您还没有到访过任何景点
-              </Text>
-            </View>
-          }
-        />
-      </View>
-    </PageTransition>
+    <View style={{ flex: 1 }}>
+      <MapView
+        className="w-full h-full"
+        style={{ flex: 1 }}
+        initialRegion={{
+          latitude: 39.9042,
+          longitude: 116.4074,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        }}
+        onMapReady={() => console.log('Visited Map is ready')}
+      >
+        {visitedAttractionsData.map((attraction) => (
+          <Marker
+            key={attraction.id}
+            coordinate={{
+              latitude: attraction.location.latitude,
+              longitude: attraction.location.longitude,
+            }}
+          >
+            <Callout>
+              <View className="p-2">
+                <Text className="text-base font-medium">{attraction.name}</Text>
+                <Text className="text-sm text-gray-600">{attraction.description}</Text>
+              </View>
+            </Callout>
+          </Marker>
+        ))}
+      </MapView>
+    </View>
   );
 } 

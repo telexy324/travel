@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, Text, Animated } from 'react-native';
-import { useFadeIn } from '../lib/animations';
+import { useFadeIn } from '@/lib/animations';
 
 interface LoadingOverlayProps {
   visible: boolean;
